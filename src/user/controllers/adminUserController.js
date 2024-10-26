@@ -36,7 +36,7 @@ exports.superLogin = async (req, res) => {
 
 
         const payload = { userName: user.userName, _id: user._id, status: user.status, userType: user.userType }
-        const token = await generateSignature(payload, '30d');
+        const token = await generateSignature(payload, '1d');
         return res.status(200).json({
             meta: { msg: "Super login successfully", status: true },
             token,
