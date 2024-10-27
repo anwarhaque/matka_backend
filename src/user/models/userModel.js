@@ -16,7 +16,12 @@ const userSchema = new mongoose.Schema({
     salt: String,
     reference: String,
     share: Number,
-    share: Number,
+    limit: Number,
+    agentShare: Number,
+    clientShare: Number,
+    commission: Number,
+    plane_password: String,
+    agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     userType: { type: String, enum: ["SUPER", 'AGENT', 'CLIENT'], default: "CLIENT" },
     status: { type: String, enum: ['ACTIVE', 'DEACTIVE'], default: 'ACTIVE' }

@@ -50,7 +50,7 @@ exports.superLogin = async (req, res) => {
 exports.createAgent = async (req, res) => {
     try {
 
-        const { name, mobileNumber, password, share, reference } = req.body;
+        const { name, mobileNumber, password, share, reference, limit, commission } = req.body;
 
         if (!name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -70,16 +70,18 @@ exports.createAgent = async (req, res) => {
 
         // Get the next available userName
         const userName = await getNextUserName();
-        const createData = { 
-            mobileNumber, 
-            userName, 
-            password: 
-            hashedPassword, 
-            name, 
-            salt, 
+        const createData = {
+            mobileNumber,
+            userName,
+            password: hashedPassword,
+            plane_password: password,
+            name,
+            salt,
             userType: 'AGENT',
             share,
-            reference 
+            reference,
+            limit,
+            commission
         }
         const user = await User.create(createData);
         if (!user) {
@@ -96,13 +98,57 @@ exports.createAgent = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
+exports.updateAgent = async (req, res) => {
+    try {
+
+        const { agentId } = req.params
+        const { name, mobileNumber, password, share, reference, limit, commission } = req.body;
+
+        if (!name || !mobileNumber || !password) {
+            return res.status(400).json({
+                meta: { msg: "Params required.", status: false }
+            });
+        }
+
+
+        const salt = await generateSalt();
+
+        const hashedPassword = await generatePassword(password, salt);
+
+
+        const updateData = {
+            mobileNumber,
+            password: hashedPassword,
+            plane_password: password,
+            name,
+            salt,
+            share,
+            reference,
+            limit,
+            commission
+        }
+        const user = await User.findByIdAndUpdate({ _id: agentId }, { $set: updateData });
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "Agent not updated", status: false }
+            })
+        }
+
+        return res.status(200).json({
+            meta: { msg: "Agent updated successfully", status: true },
+            data: user
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
 
 exports.createClient = async (req, res) => {
     try {
 
-        const { name, mobileNumber, password, rate, clientCommission, superAgentCommission, share, reference } = req.body;
+        const { agentId, name, mobileNumber, password, limit, clientShare, agentShare, commission } = req.body;
 
-        if (!name || !mobileNumber || !password) {
+        if (!agentId || !name || !mobileNumber || !password) {
             return res.status(400).json({
                 meta: { msg: "Params required.", status: false }
             });
@@ -121,18 +167,19 @@ exports.createClient = async (req, res) => {
         // Get the next available userName
         const userName = await getNextUserName();
 
-        const createData = { 
-            mobileNumber, 
-            userName, 
-            password: hashedPassword, 
-            name, 
-            salt, 
+        const createData = {
+            agentId,
+            name,
+            mobileNumber,
+            userName,
+            password: hashedPassword,
+            plane_password: password,
+            salt,
             userType: 'CLIENT',
-            rate, 
-            clientCommission, 
-            superAgentCommission, 
-            share, 
-            reference 
+            limit,
+            clientShare,
+            agentShare,
+            commission
         }
         const user = await User.create(createData);
         if (!user) {
@@ -143,6 +190,48 @@ exports.createClient = async (req, res) => {
 
         return res.status(200).json({
             meta: { msg: "Client created successfully", status: true },
+            data: user
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.updateClient = async (req, res) => {
+    try {
+        const { clientId } = req.params
+        const { agentId, name, mobileNumber, password, limit, clientShare, agentShare, commission } = req.body;
+
+        if (!agentId || !name || !mobileNumber || !password) {
+            return res.status(400).json({
+                meta: { msg: "Params required.", status: false }
+            });
+        }
+
+        const salt = await generateSalt();
+
+        const hashedPassword = await generatePassword(password, salt);
+
+        const createData = {
+            name,
+            agentId,
+            mobileNumber,
+            password: hashedPassword,
+            plane_password: password,
+            salt,
+            limit,
+            clientShare,
+            agentShare,
+            commission
+        }
+        const user = await User.findOneAndUpdate({ _id: clientId }, createData);
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "Client not updated", status: false }
+            })
+        }
+
+        return res.status(200).json({
+            meta: { msg: "Client updated successfully", status: true },
             data: user
         })
     } catch (error) {
@@ -194,6 +283,86 @@ exports.changePassword = async (req, res) => {
         }
         return res.status(200).json({
             meta: { msg: "Password updated successfully", status: true }
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.changeStatus = async (req, res) => {
+    try {
+
+        const { _id } = req.params;
+        const { status } = req.body;
+
+
+        const user = await User.findOneAndUpdate({ _id }, { $set: { status } }, { new: true })
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "Status not updated", status: false }
+            });
+        }
+        return res.status(200).json({
+            meta: { msg: "Status updated successfully", status: true }
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.getUser = async (req, res) => {
+    try {
+
+        const { _id } = req.params
+        const user = await User.findOne({ _id });
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "User not found", status: false }
+            })
+        }
+
+        return res.status(200).json({
+            meta: { msg: "User found successfully", status: true },
+            data: user
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.listUser = async (req, res) => {
+    try {
+
+        const { userType } = req.query
+        const users = await User.aggregate([
+            {
+                $match: { userType }
+            },
+            {
+                $sort: { createdAt: -1 }
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'agentId',
+                    foreignField: '_id',
+                    as: 'agent',
+                },
+            },
+            {
+                $unwind: {
+                    path: '$agent',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+        ])
+
+        if (!users.length) {
+            return res.status(500).json({
+                meta: { msg: `${userType} not found`, status: false }
+            })
+        }
+
+        return res.status(200).json({
+            meta: { msg: `${userType} found successfully`, status: true },
+            data: users
         })
     } catch (error) {
         return res.status(400).json({ message: error.message });
