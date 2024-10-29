@@ -50,7 +50,7 @@ exports.superLogin = async (req, res) => {
 exports.createAgent = async (req, res) => {
     try {
 
-        const { name, mobileNumber, password, share, reference, limit, commission } = req.body;
+        const { name, mobileNumber, password, share, reference, limit, commission, agentShare } = req.body;
 
         if (!name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -81,7 +81,8 @@ exports.createAgent = async (req, res) => {
             share,
             reference,
             limit,
-            commission
+            commission,
+            agentShare
         }
         const user = await User.create(createData);
         if (!user) {
@@ -102,7 +103,7 @@ exports.updateAgent = async (req, res) => {
     try {
 
         const { agentId } = req.params
-        const { name, mobileNumber, password, share, reference, limit, commission } = req.body;
+        const { name, mobileNumber, password, share, reference, limit, commission, agentShare } = req.body;
 
         if (!name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -125,7 +126,8 @@ exports.updateAgent = async (req, res) => {
             share,
             reference,
             limit,
-            commission
+            commission,
+            agentShare
         }
         const user = await User.findByIdAndUpdate({ _id: agentId }, { $set: updateData });
         if (!user) {
@@ -288,26 +290,6 @@ exports.changePassword = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
-exports.changeStatus = async (req, res) => {
-    try {
-
-        const { _id } = req.params;
-        const { status } = req.body;
-
-
-        const user = await User.findOneAndUpdate({ _id }, { $set: { status } }, { new: true })
-        if (!user) {
-            return res.status(500).json({
-                meta: { msg: "Status not updated", status: false }
-            });
-        }
-        return res.status(200).json({
-            meta: { msg: "Status updated successfully", status: true }
-        })
-    } catch (error) {
-        return res.status(400).json({ message: error.message });
-    }
-};
 exports.getUser = async (req, res) => {
     try {
 
@@ -354,15 +336,53 @@ exports.listUser = async (req, res) => {
             },
         ])
 
-        if (!users.length) {
-            return res.status(500).json({
-                meta: { msg: `${userType} not found`, status: false }
-            })
-        }
+        // if (!users.length) {
+        //     return res.status(200).json({
+        //         meta: { msg: `${userType} not found`, status: false }
+        //     })
+        // }
 
         return res.status(200).json({
             meta: { msg: `${userType} found successfully`, status: true },
             data: users
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.changeStatus = async (req, res) => {
+    try {
+
+        const { _id } = req.params;
+        const { status } = req.body;
+
+
+        const user = await User.findOneAndUpdate({ _id }, { $set: { status } }, { new: true })
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "Status not updated", status: false }
+            });
+        }
+        return res.status(200).json({
+            meta: { msg: "Status updated successfully", status: true }
+        })
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+};
+exports.deleteUser = async (req, res) => {
+    try {
+
+        const { _id } = req.params;
+       
+        const user = await User.findOneAndDelete({ _id })
+        if (!user) {
+            return res.status(500).json({
+                meta: { msg: "User not delete", status: false }
+            });
+        }
+        return res.status(200).json({
+            meta: { msg: "User deleted successfully", status: true }
         })
     } catch (error) {
         return res.status(400).json({ message: error.message });
