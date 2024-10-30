@@ -1,7 +1,8 @@
 const { Router } = require("express");
-const adminUserRoutes = require("../user/routes/adminUserRoutes");
-const agentUserRoutes = require("../user/routes/agentUserRoutes");
-const clientUserRoutes = require("../user/routes/clientUserRoutes");
+const adminUserRoutes = require("../modules/user/routes/adminUserRoutes");
+const agentUserRoutes = require("../modules/user/routes/agentUserRoutes");
+const clientUserRoutes = require("../modules/user/routes/clientUserRoutes");
+const limitRoutes = require("../modules/limit/routes/limitRoutes");
 
 const baseRouter = Router();
 const basePath = '/v1/api'
@@ -14,6 +15,8 @@ baseRouter.use("/agent", agentUserRoutes);
 
 //Client routes
 baseRouter.use("/client", clientUserRoutes);
+
+baseRouter.use("/limit", limitRoutes);
   
 
 module.exports = { basePath, baseRouter };

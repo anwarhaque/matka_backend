@@ -1,5 +1,5 @@
 
-const { authAdmin } = require('../../middlewares/authMiddleware')
+const { authAdmin } = require('../../../middlewares/authMiddleware');
 const { superLogin, createAgent, updateAgent, getUser, listUser, createClient, updateClient, getProfile, changePassword, changeStatus, deleteUser } = require("../controllers/adminUserController");
 
 const adminUserRoutes = require("express").Router();
@@ -19,5 +19,8 @@ adminUserRoutes.get("/getUser/:_id", authAdmin, getUser);
 adminUserRoutes.get("/listUser", authAdmin, listUser);
 adminUserRoutes.put("/changeStatus/:_id", authAdmin, changeStatus);
 adminUserRoutes.delete("/deleteUser/:_id", authAdmin, deleteUser);
+
+
+
 
 module.exports = adminUserRoutes;

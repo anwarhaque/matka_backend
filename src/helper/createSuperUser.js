@@ -1,4 +1,4 @@
-const User = require("../user/models/userModel");
+const User = require("../modules/user/models/userModel");
 const getNextUserName = require("./getNextUserName");
 const { generateSalt, generatePassword } = require("./jwtHelper");
 

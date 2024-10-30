@@ -1,5 +1,5 @@
-const getNextUserName = require("../../helper/getNextUserName");
-const { generateSalt, generatePassword, generateSignature, validatePassword } = require("../../helper/jwtHelper");
+const getNextUserName = require("../../../helper/getNextUserName");
+const { generateSalt, generatePassword, generateSignature, validatePassword } = require("../../../helper/jwtHelper");
 const User = require("../models/userModel");
 
 exports.agentLogin = async (req, res) => {

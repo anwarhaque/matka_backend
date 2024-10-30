@@ -1,4 +1,4 @@
-const { generateSignature, validatePassword } = require("../../helper/jwtHelper");
+const { generateSignature, validatePassword } = require("../../../helper/jwtHelper");
 const User = require("../models/userModel");
 
 exports.clientLogin = async (req, res) => {

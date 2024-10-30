@@ -1,5 +1,6 @@
-const getNextUserName = require("../../helper/getNextUserName");
-const { generateSalt, generatePassword, generateSignature, validatePassword } = require("../../helper/jwtHelper");
+const { default: mongoose } = require("mongoose");
+const getNextUserName = require("../../../helper/getNextUserName");
+const { generateSalt, generatePassword, generateSignature, validatePassword } = require("../../../helper/jwtHelper");
 const User = require("../models/userModel");
 
 
@@ -50,7 +51,7 @@ exports.superLogin = async (req, res) => {
 exports.createAgent = async (req, res) => {
     try {
 
-        const { name, mobileNumber, password, share, reference, limit, commission, agentShare } = req.body;
+        const { name, mobileNumber, password, agentShare } = req.body;
 
         if (!name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -78,10 +79,6 @@ exports.createAgent = async (req, res) => {
             name,
             salt,
             userType: 'AGENT',
-            share,
-            reference,
-            limit,
-            commission,
             agentShare
         }
         const user = await User.create(createData);
@@ -103,7 +100,7 @@ exports.updateAgent = async (req, res) => {
     try {
 
         const { agentId } = req.params
-        const { name, mobileNumber, password, share, reference, limit, commission, agentShare } = req.body;
+        const { name, mobileNumber, password, agentShare } = req.body;
 
         if (!name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -123,10 +120,6 @@ exports.updateAgent = async (req, res) => {
             plane_password: password,
             name,
             salt,
-            share,
-            reference,
-            limit,
-            commission,
             agentShare
         }
         const user = await User.findByIdAndUpdate({ _id: agentId }, { $set: updateData });
@@ -148,7 +141,7 @@ exports.updateAgent = async (req, res) => {
 exports.createClient = async (req, res) => {
     try {
 
-        const { agentId, name, mobileNumber, password, limit, clientShare, agentShare, commission } = req.body;
+        const { agentId, name, mobileNumber, password, limit, agentCommission, clientCommission, clientShare, rate } = req.body;
 
         if (!agentId || !name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -178,10 +171,10 @@ exports.createClient = async (req, res) => {
             plane_password: password,
             salt,
             userType: 'CLIENT',
-            limit,
+            agentCommission,
+            clientCommission,
             clientShare,
-            agentShare,
-            commission
+            rate
         }
         const user = await User.create(createData);
         if (!user) {
@@ -201,7 +194,7 @@ exports.createClient = async (req, res) => {
 exports.updateClient = async (req, res) => {
     try {
         const { clientId } = req.params
-        const { agentId, name, mobileNumber, password, limit, clientShare, agentShare, commission } = req.body;
+        const { agentId, name, mobileNumber, password, agentCommission, clientCommission, clientShare, rate } = req.body;
 
         if (!agentId || !name || !mobileNumber || !password) {
             return res.status(400).json({
@@ -220,10 +213,10 @@ exports.updateClient = async (req, res) => {
             password: hashedPassword,
             plane_password: password,
             salt,
-            limit,
+            agentCommission,
+            clientCommission,
             clientShare,
-            agentShare,
-            commission
+            rate
         }
         const user = await User.findOneAndUpdate({ _id: clientId }, createData);
         if (!user) {
@@ -312,10 +305,10 @@ exports.getUser = async (req, res) => {
 exports.listUser = async (req, res) => {
     try {
 
-        const { userType } = req.query
+        const { userType, agentId } = req.query
         const users = await User.aggregate([
             {
-                $match: { userType }
+                $match: { userType, ...(agentId && { agentId: new mongoose.Types.ObjectId(agentId) }) }
             },
             {
                 $sort: { createdAt: -1 }
@@ -374,7 +367,7 @@ exports.deleteUser = async (req, res) => {
     try {
 
         const { _id } = req.params;
-       
+
         const user = await User.findOneAndDelete({ _id })
         if (!user) {
             return res.status(500).json({

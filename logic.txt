@@ -1,0 +1,62 @@
+1)10*10
+    agent comm. =0%
+    client comm. =0%
+
+    10 ke signle 10 * 10 =100 add honge
+    10 ke jodi 10 * 100= 1000 add honge
+    10 ke single Patti 10 * 150 = 1500 add honge
+    10 ke double Patti 10 * 300 =3000 add honge
+    10 ke tripel Patti 10 * 900 = 9000 add honge
+
+    agent comm. = 0
+    clint comm. = 0
+
+2)9*10
+    total comm.= 10%
+    agent comm. and client commi. should be total 10%
+    
+    agent comm. = 2%
+    clint comm. = 8%
+
+    (total comm. = 10%)
+
+    10 ke signle 10 * 9 =90 add honge
+    10 ke jodi 10 * 90= 900 add honge
+    10 ke single Patti 10 * 140 = 1400 add honge
+    10 ke double Patti 10 * 280 =2800 add honge
+    10 ke tripel Patti 10 * 280*3 = 8400 add honge
+
+
+    client limit = 1000         clinet limit =1008(after game)                                        agnet limit =4000    agnet limit =4002(after game)
+
+    client ne 100 ka game lagaya
+    
+    client after game limit = 900
+
+    failed condition
+
+    total comm.=10
+    agent comm. = 2
+    clint comm. = 8
+
+
+
+
+    client ne 100 ka game lagaya
+    
+    client after game limit = 900 +(900 + 8(client comm.))
+
+    success condition
+
+    total comm.=10
+    agent comm. = 2
+    clint comm. = 8
+    
+    total comm.=10
+    agent comm. = 2
+    clint comm. = 8
+
+
+
+
+*Agent Share 
