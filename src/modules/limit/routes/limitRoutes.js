@@ -1,8 +1,9 @@
-const { addLimit, listLimit } = require("../controlles/limitController");
+const { updateAgentLimit, updateClientLimit, limitHistory } = require("../controlles/limitController");
 
 const limitRoutes = require("express").Router();
 
-limitRoutes.post("/addLimit", addLimit);
-limitRoutes.get("/listLimit/:userId", listLimit);
+limitRoutes.post("/updateAgentLimit", updateAgentLimit);
+limitRoutes.post("/updateClientLimit", updateClientLimit);
+limitRoutes.get("/limitHistory", limitHistory);
 
 module.exports = limitRoutes;

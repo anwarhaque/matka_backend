@@ -141,7 +141,7 @@ exports.updateAgent = async (req, res) => {
 exports.createClient = async (req, res) => {
     try {
 
-        const { agentId, name, mobileNumber, password, limit, agentCommission, clientCommission, clientShare, rate } = req.body;
+        const { agentId, name, mobileNumber, password, agentCommission, clientCommission, clientShare, rate } = req.body;
 
         if (!agentId || !name || !mobileNumber || !password) {
             return res.status(400).json({

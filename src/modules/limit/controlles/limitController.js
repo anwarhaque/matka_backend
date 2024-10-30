@@ -3,13 +3,13 @@ const Limit = require("../models/limitModel");
 const mongoose = require('mongoose');
 
 
-exports.addLimit = async (req, res) => {
+exports.updateAgentLimit = async (req, res) => {
 
 
-    const { senderId, receiverId, amount, newLimit, oldLimit } = req.body;
+    const { agentId, adminId, amount } = req.body;
 
     try {
-        // Check if amount is positive
+
         if (amount == 0) {
             return res.status(400).json({
                 meta: { msg: "Invalid amount", status: false }
@@ -17,42 +17,40 @@ exports.addLimit = async (req, res) => {
         }
 
         // Fetch sender and receiver
-        const sender = await User.findById(senderId);
-        const receiver = await User.findById(receiverId);
+        const agent = await User.findById(agentId);
+        const admin = await User.findById(adminId);
 
-        if (!sender || !receiver) {
+        if (!agent || !admin) {
             return res.status(404).json({
-                meta: { msg: "Sender or receiver not found", status: false }
+                meta: { msg: "Agent or Admin not found", status: false }
             });
 
         }
 
-        // Check if sender has sufficient balance
-        if (sender.limit < amount) {
-            return res.status(400).json({
-                meta: { msg: "Insufficient balance", status: false }
-            });
+        if (amount > 0) {
+            await Limit.create({
+                agentId,
+                amount,
+                oldLimit: agent.limit,
+                newLimit: agent.limit + amount,
+                userId: adminId,
+            })
+            agent.limit += amount;
+
+        } else {
+            const _amount = Math.abs(amount)
+            await Limit.create({
+                agentId,
+                amount:-_amount,
+                oldLimit: agent.limit,
+                newLimit: agent.limit - _amount,
+                userId: adminId,
+            })
+            agent.limit -= _amount;
         }
 
-        // Debit from sender and credit to receiver
-        sender.limit -= amount;
-        receiver.limit += amount;
+        await agent.save();
 
-        // Save the users' new balances
-        await sender.save();
-        await receiver.save();
-
-        // Create a transaction record
-        // const transaction = new Transaction({
-        //     sender: sender._id,
-        //     receiver: receiver._id,
-        //     amount,
-        // });
-        // await transaction.save();
-
-        await Limit.create({
-            senderId, receiverId, amount, newLimit, oldLimit
-        })
 
         return res.status(200).json({
             meta: { msg: "Limit added successfully", status: true }
@@ -63,60 +61,192 @@ exports.addLimit = async (req, res) => {
     }
 
 }
-exports.listLimit = async (req, res) => {
+
+exports.updateClientLimit = async (req, res) => {
 
 
-    const { userId } = req.params;
-    console.log(userId);
-
+    const { clientId, agentId, amount } = req.body;
 
     try {
 
+        if (amount == 0) {
+            return res.status(400).json({
+                meta: { msg: "Invalid amount", status: false }
+            });
+        }
 
-        const limits = await Limit.aggregate([
+        // Fetch sender and receiver
+        const client = await User.findById(clientId);
+        const agent = await User.findById(agentId);
+
+        if (!client || !agent) {
+            return res.status(404).json({
+                meta: { msg: "Client or Agent not found", status: false }
+            });
+
+        }
+
+
+        if (amount > 0) {
+
+            if (agent.limit < amount) {
+                return res.status(400).json({
+                    meta: { msg: "Insufficient limit", status: false }
+                });
+            }
+
+            await Limit.create({
+                agentId,
+                oldLimit: agent.limit,
+                newLimit: agent.limit - amount,
+                amount: -amount,
+                userId: clientId
+            })
+            await Limit.create({
+                clientId,
+                oldLimit: client.limit,
+                newLimit: client.limit + amount,
+                amount: amount,
+                userId: agentId
+            })
+
+            agent.limit -= amount;
+            client.limit += amount;
+
+
+
+        } else {
+            const _amount = Math.abs(amount)
+           
+            await Limit.create({
+                agentId,
+                oldLimit: agent.limit,
+                newLimit: agent.limit + _amount,
+                amount: _amount,
+                userId: clientId
+            })
+            await Limit.create({
+                clientId,
+                oldLimit: client.limit,
+                newLimit: client.limit - _amount,
+                amount: -_amount,
+                userId: agentId
+            })
+
+            agent.limit += _amount;
+            client.limit -= _amount;
+        }
+
+
+
+        // Save the users' new balances
+        await agent.save();
+        await client.save();
+
+
+        return res.status(200).json({
+            meta: { msg: "Limit added successfully", status: true }
+        });
+
+    } catch (error) {
+        return res.status(400).json({ message: error.message });
+    }
+
+}
+
+exports.limitHistory = async (req, res) => {
+
+
+
+    try {
+        const { agentId, clientId } = req.query;
+
+
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+
+        const filter = {
+            ...(agentId && { agentId: new mongoose.Types.ObjectId(agentId) }),
+            ...(clientId && { clientId: new mongoose.Types.ObjectId(clientId) }),
+        }
+        // Aggregation pipeline
+        const pipeline = [
             {
-                $match: {
-                    $or: [{ senderId: new mongoose.Types.ObjectId(userId) }, { receiverId: new mongoose.Types.ObjectId(userId) }],
-                }
+
+                $match: filter
+            },
+            {
+
+                $lookup: {
+                    from: 'users',
+                    localField: 'agentId',
+                    foreignField: '_id',
+                    as: 'agent',
+                },
+            },
+            {
+
+                $unwind: {
+                    path: '$agent',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'clientId',
+                    foreignField: '_id',
+                    as: 'client',
+                },
+            },
+            {
+
+                $unwind: {
+                    path: '$client',
+                    preserveNullAndEmptyArrays: true,
+                },
+            },
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'userId',
+                    foreignField: '_id',
+                    as: 'user',
+                },
+            },
+            {
+
+                $unwind: {
+                    path: '$user',
+                    preserveNullAndEmptyArrays: true,
+                },
             },
             {
                 $sort: { createdAt: -1 }
             },
             {
-                $lookup: {
-                    from: 'users',
-                    localField: 'senderId',
-                    foreignField: '_id',
-                    as: 'sender'
-                }
+                // Pagination stages
+                $skip: skip, // Number of documents to skip
             },
             {
-                $lookup: {
-                    from: 'users',
-                    localField: 'receiverId',
-                    foreignField: '_id',
-                    as: 'receiver'
-                }
+                $limit: limit, // Number of documents to return
             },
-            {
-                $unwind: {
-                    path: '$sender',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-            {
-                $unwind: {
-                    path: '$receiver',
-                    preserveNullAndEmptyArrays: true
-                }
-            },
-        ])
+        ];
 
+        const limits = await Limit.aggregate(pipeline)
 
+        const totalCount = await User.countDocuments(filter)
         return res.status(200).json({
             meta: { msg: "List found successfully", status: true },
-            data: limits
+            data: limits,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: page,
         });
+
+
 
     } catch (error) {
         return res.status(400).json({ message: error.message });
