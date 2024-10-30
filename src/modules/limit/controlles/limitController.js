@@ -178,6 +178,9 @@ exports.limitHistory = async (req, res) => {
                 $match: filter
             },
             {
+                $sort: { createdAt: -1 }
+            },
+            {
 
                 $lookup: {
                     from: 'users',
@@ -223,9 +226,7 @@ exports.limitHistory = async (req, res) => {
                     preserveNullAndEmptyArrays: true,
                 },
             },
-            {
-                $sort: { createdAt: -1 }
-            },
+            
             {
                 // Pagination stages
                 $skip: skip, // Number of documents to skip
@@ -237,7 +238,7 @@ exports.limitHistory = async (req, res) => {
 
         const limits = await Limit.aggregate(pipeline)
 
-        const totalCount = await User.countDocuments(filter)
+        const totalCount = await Limit.countDocuments(filter)
         return res.status(200).json({
             meta: { msg: "List found successfully", status: true },
             data: limits,
