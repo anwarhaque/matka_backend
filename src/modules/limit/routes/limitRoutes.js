@@ -1,4 +1,4 @@
-const { updateAgentLimit, updateClientLimit, limitHistory } = require("../controlles/limitController");
+const { updateAgentLimit, updateClientLimit, limitHistory } = require("../controllers/limitController");
 
 const limitRoutes = require("express").Router();
 
