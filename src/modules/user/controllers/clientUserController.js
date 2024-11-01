@@ -1,4 +1,4 @@
-const { generateSignature, validatePassword } = require("../../../helper/jwtHelper");
+const { generateSignature, validatePassword, generateSalt, generatePassword } = require("../../../helper/jwtHelper");
 const User = require("../models/userModel");
 
 exports.clientLogin = async (req, res) => {
@@ -81,7 +81,7 @@ exports.changePassword = async (req, res) => {
         const salt = await generateSalt();
         const hashedPassword = await generatePassword(password, salt);
 
-        const user = await User.findOneAndUpdate({ _id }, { $set: { password: hashedPassword, salt } }, { new: true })
+        const user = await User.findOneAndUpdate({ _id }, { $set: { password: hashedPassword, salt, plane_password: password } }, { new: true })
         if (!user) {
             return res.status(500).json({
                 meta: { msg: "Password not updated", status: false }

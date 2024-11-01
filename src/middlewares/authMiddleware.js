@@ -66,10 +66,9 @@ const authClient = async (req, res, next) => {
         return res.status(403).json({
             meta: { msg: "Not Authorized", status: false }
         })
-    }
+    } 
 
-
-    if (req.profile.userType != 'AGENT') {
+    if (req.profile.userType != 'CLIENT') {
         return res.status(403).json({
             meta: { msg: "Not Authorized", status: false }
         })
@@ -80,6 +79,8 @@ const authClient = async (req, res, next) => {
         })
     }
 
+    console.log('done');
+    
     return next();
 }
 
