@@ -6,17 +6,13 @@ exports.addGame = async (req, res) => {
         const { _id: clientId } = req.profile;
 
         const { num, amount, roundType } = req.body;
-        if (!num || !amount) {
+        if (!amount || !roundType) {
             return res.status(400).json({
                 meta: { msg: "Params required", status: false }
             });
         }
 
         const client = await User.findById(clientId)
-        console.log('clientId', clientId);
-        console.log('_id', client._id);
-        console.log('agentId', client.agentId);
-       
 
         if (!client) {
             return res.status(404).json({
@@ -61,9 +57,7 @@ exports.listGame = async (req, res) => {
             },
         }
 
-
-       
-        const games = await Game.find(filterData)
+        const games = await Game.find(filterData).sort({ createdAt: -1 })
 
         return res.status(200).json({
             meta: { msg: "Game list found successfully", status: true },
