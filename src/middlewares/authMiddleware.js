@@ -78,8 +78,6 @@ const authClient = async (req, res, next) => {
             meta: { msg: "Your account is inactive", status: false }
         })
     }
-
-    console.log('done');
     
     return next();
 }

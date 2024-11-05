@@ -1,4 +1,5 @@
 const Drow = require("../models/drowModel");
+const mongoose = require('mongoose');
 
 exports.addDrow = async (req, res) => {
     try {
@@ -58,11 +59,17 @@ exports.getDrow = async (req, res) => {
     try {
         const { drowId } = req.params
 
+        // Validate the id format
+        if (!mongoose.Types.ObjectId.isValid(drowId)) {
+            return res.status(400).json({
+                meta: { msg: "Invalid ID format", status: false }
+            });
+        }
+
         const drow = await Drow.findById(drowId)
         if (!drow) {
             return res.status(404).json({
-                meta: { msg: "Drow not found", status: false },
-                data: drow
+                meta: { msg: "Drow not found", status: false }
             });
         }
 
