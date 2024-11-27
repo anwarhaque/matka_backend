@@ -5,8 +5,8 @@ exports.addGame = async (req, res) => {
     try {
         const { _id: clientId } = req.profile;
 
-        const { num, amount, roundType } = req.body;
-        if (!amount || !roundType) {
+        const { drowId, num, amount, roundType } = req.body;
+        if (!drowId || !amount || !roundType) {
             return res.status(400).json({
                 meta: { msg: "Params required", status: false }
             });
@@ -21,15 +21,21 @@ exports.addGame = async (req, res) => {
         }
 
         const game = await Game.create({
+            drowId,
             num,
             amount,
             clientId: client._id,
             agentId: client.agentId,
-            roundType
+            roundType: roundType.toUpperCase()
         })
+
+        client.limit -= amount
+        const updatedClient = await client.save()
+
         return res.status(200).json({
             meta: { msg: "Game added successfully", status: true },
-            data: game
+            data: game,
+            client: updatedClient
         });
 
     } catch (error) {
@@ -41,7 +47,7 @@ exports.addGame = async (req, res) => {
 exports.listGame = async (req, res) => {
     try {
         const { _id: clientId } = req.profile;
-
+        const { drowId, roundType } = req.query
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
@@ -50,6 +56,8 @@ exports.listGame = async (req, res) => {
         endOfToday.setHours(23, 59, 59, 999);
 
         const filterData = {
+            ...(drowId && { drowId }),
+            ...(roundType && { roundType: roundType.toUpperCase() }),
             clientId,
             lockTime: {
                 $gte: startOfToday,
@@ -74,12 +82,23 @@ exports.deleteGame = async (req, res) => {
     try {
         const { gameId } = req.params;
 
+        const { _id: clientId } = req.profile;
+
         const game = await Game.findByIdAndDelete(gameId)
+
+        if (!game) {
+            return res.status(400).json({
+                meta: { msg: "Game not found", status: false },
+            });
+        }
+        const client = await User.findByIdAndUpdate(clientId, { $inc: { limit: game.amount } }, { new: true })
 
         return res.status(200).json({
             meta: { msg: "Game removed successfully", status: true },
-            data: game
+            data: game,
+            client
         });
+
 
     } catch (error) {
         return res.status(400).json({ message: error.message });

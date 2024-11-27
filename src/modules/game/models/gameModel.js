@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const gameSchema = new mongoose.Schema({
-
+    drowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Drow', required: true },
     num: { type: Number, default: 0 },
     amount: { type: Number, default: 0 },
     agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
