@@ -3,7 +3,7 @@ const Game = require("../models/gameModel");
 
 const checkGameType = (number) => {
     if (number >= 0 && number <= 9) {
-        return "SGL";
+        return "SINGLE";
     } else if (number >= 10 && number <= 99) {
         return "JODI";
     } else if (number >= 100 && number <= 999) {
