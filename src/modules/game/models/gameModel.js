@@ -7,6 +7,7 @@ const gameSchema = new mongoose.Schema({
     agentId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
     roundType: { type: String, enum: ["OPEN", 'CLOSE'] },
+    gameType: { type: String, enum: ["SGL", 'JODI', 'PATTI'] },
     lockTime: { type: Date, default: Date.now },
 },
     {

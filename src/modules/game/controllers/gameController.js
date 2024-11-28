@@ -1,6 +1,17 @@
 const User = require("../../user/models/userModel");
 const Game = require("../models/gameModel");
 
+const checkGameType = (number) => {
+    if (number >= 0 && number <= 9) {
+        return "SGL";
+    } else if (number >= 10 && number <= 99) {
+        return "JODI";
+    } else if (number >= 100 && number <= 999) {
+        return "PATTI";
+    } else {
+        return "";
+    }
+}
 exports.addGame = async (req, res) => {
     try {
         const { _id: clientId } = req.profile;
@@ -23,6 +34,7 @@ exports.addGame = async (req, res) => {
         const game = await Game.create({
             drowId,
             num,
+            gameType: checkGameType(num),
             amount,
             clientId: client._id,
             agentId: client.agentId,
