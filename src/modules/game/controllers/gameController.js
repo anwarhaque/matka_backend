@@ -38,7 +38,13 @@ exports.addGame = async (req, res) => {
             amount,
             clientId: client._id,
             agentId: client.agentId,
-            roundType: roundType.toUpperCase()
+            roundType: roundType.toUpperCase(),
+            clientCommPer:client.clientCommission,
+            clientCommAmount:(amount*client.clientCommission)/100,
+            agentCommPer:client.agentCommission,
+            agentCommAmount:(amount*client.agentCommission)/100,
+            totalCommPer:client.clientCommission+client.agentCommission,
+            totalCommAmount:(client.clientCommission+client.agentCommission)*amount/100
         })
 
         client.limit -= amount

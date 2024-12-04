@@ -19,7 +19,7 @@ exports.getOpenStatus = async (req, res) => {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
             },
-            ...(drowId && { drowId }),
+            ...(drowId && { drowId: new mongoose.Types.ObjectId(drowId) }),
             ...(roundType && { roundType })
         }
         // console.log(filterData);
@@ -34,10 +34,16 @@ exports.getOpenStatus = async (req, res) => {
                     totalAmount: {
                         $sum: "$amount"
                     },
+                    totalCommAmount: {
+                        $sum: "$totalCommAmount"
+                    },
                     count: {
                         $sum: 1
                     }
                 }
+            },
+            {
+                $sort: { "_id": 1 }
             }
         ])
 
@@ -50,6 +56,9 @@ exports.getOpenStatus = async (req, res) => {
                     _id: "$num",
                     totalAmount: {
                         $sum: "$amount"
+                    },
+                    totalCommAmount: {
+                        $sum: "$totalCommAmount"
                     },
                     count: {
                         $sum: 1
@@ -67,6 +76,9 @@ exports.getOpenStatus = async (req, res) => {
                     totalAmount: {
                         $sum: "$amount"
                     },
+                    totalCommAmount: {
+                        $sum: "$totalCommAmount"
+                    },
                     count: {
                         $sum: 1
                     }
@@ -83,6 +95,9 @@ exports.getOpenStatus = async (req, res) => {
                     _id: "$gameType",
                     totalAmount: {
                         $sum: "$amount"
+                    },
+                    totalCommAmount: {
+                        $sum: "$totalCommAmount"
                     },
                     count: {
                         $sum: 1
