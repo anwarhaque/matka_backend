@@ -49,7 +49,13 @@ exports.getOpenStatus = async (req, res) => {
 
         const jodiNumWiseTotalAmount = await Game.aggregate([
             {
-                $match: { ...filterData, gameType: "JODI" }
+                $match: {
+                    createdAt: {
+                        $gte: startOfDay, // Start of the day
+                        $lt: endOfDay     // Start of the next day (exclusive)
+                    },
+                    ...(drowId && { drowId: new mongoose.Types.ObjectId(drowId) }), gameType: "JODI"
+                },
             },
             {
                 $group: {
@@ -107,7 +113,13 @@ exports.getOpenStatus = async (req, res) => {
         ])
         const currentOpenStatus = await Game.aggregate([
             {
-                $match: filterData
+                $match: {
+                    createdAt: {
+                        $gte: startOfDay, // Start of the day
+                        $lt: endOfDay     // Start of the next day (exclusive)
+                    },
+                    ...(drowId && { drowId: new mongoose.Types.ObjectId(drowId) }),
+                }
             },
             {
                 $group: {

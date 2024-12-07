@@ -26,8 +26,13 @@ exports.addGame = async (req, res) => {
         const client = await User.findById(clientId)
 
         if (!client) {
-            return res.status(404).json({
+            return res.status(400).json({
                 meta: { msg: "Client not found", status: false }
+            });
+        }
+        if (checkGameType(num)=== 'JODI' && roundType.toUpperCase()==='CLOSE') {
+            return res.status(400).json({
+                meta: { msg: "Sorry JODI is not allowed in close round", status: false }
             });
         }
 
