@@ -2,6 +2,7 @@
 const mongoose = require('mongoose');
 const Game = require('../../game/models/gameModel');
 const GameResult = require('../../game/models/gameResultModel');
+const User = require('../../user/models/userModel');
 
 
 exports.getOpenStatus = async (req, res) => {
@@ -207,10 +208,50 @@ exports.updateResult = async (req, res) => {
     try {
 
 
+        if (!selectedDate || !drowId || !roundType || !openPatti) {
+
+            return res.status(400).json({
+                meta: { msg: `Param missing`, status: false }
+            })
+        }
+
+        if(roundType === 'CLOSE' && !closePatti){
+            return res.status(400).json({
+                meta: { msg: `Param missing`, status: false }
+            })
+        }
+
         const startOfDay = new Date(selectedDate);
         const endOfDay = new Date(selectedDate);
         endOfDay.setDate(endOfDay.getDate() + 1);
 
+
+        const isResultExist = await GameResult.findOne(
+            {
+                drowId: drowId,
+                resultLockDate: { $gte: startOfDay, $lte: endOfDay },
+                ...(roundType === 'OPEN' && {
+                    openPatti: { 
+                        $exists: true, 
+                        $ne: null,  // Not null
+                        $ne: ""     // Not empty string
+                      }
+                }),
+                ...(roundType === 'CLOSE' && {
+                    closePatti: { 
+                        $exists: true, 
+                        $ne: null,  // Not null
+                        $ne: ""     // Not empty string
+                      }
+                }),
+            }
+        );
+
+        if (isResultExist) {
+            return res.status(400).json({
+                meta: { msg: `${roundType} result already exists`, status: false }
+            })
+        }
 
 
         const data = {
@@ -246,13 +287,14 @@ exports.updateResult = async (req, res) => {
             ...(drowId && { drowId: new mongoose.Types.ObjectId(drowId) }),
             ...(roundType && { roundType })
         }
-        // const filter = { roundType: roundType, gameType: 'PATTI' };
-        // const update = { $inc: { age: 1 } };
+
+      
+
 
         const pattiResult = roundType === 'OPEN' ? openPatti : closePatti
         const numResult = (sumOfDigits(roundType === 'OPEN' ? openPatti : closePatti) % 10).toString()
         const jodiResult = roundType === 'CLOSE' ? `${sumOfDigits(openPatti) % 10}${sumOfDigits(closePatti) % 10}` : ''
-       
+
 
         await Game.updateMany({ ...filterData, gameType: 'PATTI', num: pattiResult }, [
             {
@@ -322,10 +364,55 @@ exports.updateResult = async (req, res) => {
             })
         }
 
+        //update user balance
+
+        const clientsPayment = await Game.aggregate([
+            {
+              $match: filterData
+            },
+            {
+              $group: {
+                _id: "$clientId",
+                   totalResultAmount: {
+                    $sum: "$resultAmount"
+                },
+
+                totalAgentCommAmount: {
+                    $sum: "$agentCommAmount"
+                },
+                totalClientCommAmount: {
+                    $sum: "$clientCommAmount"
+                },
+              }
+            },
+            {
+              $addFields: {
+                finalClientAmount: {
+                  $add: ["$totalResultAmount", "$totalClientCommAmount"]
+                }
+              }
+            }
+          ])
+
+
+          for (const client of clientsPayment) {
+            
+            const user = await User.findByIdAndUpdate(
+                client._id, 
+                { $inc: { limit: client.finalClientAmount } },
+                { new: true } 
+            ) 
+            const agent = await User.findByIdAndUpdate(
+                user.agentId, 
+                { $inc: { limit: client.totalAgentCommAmount } },
+                { new: true } 
+            ) 
+          }
+        
+
 
         return res.status(200).json({
-            meta: { msg: `${roundType} Result updated successfully`, status: true },
-            data: result
+            meta: { msg: `${roundType} Result updated successfully`, status: true }
         })
     } catch (error) {
         return res.status(400).json({ message: error.message });
