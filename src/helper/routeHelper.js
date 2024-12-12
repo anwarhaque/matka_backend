@@ -6,6 +6,7 @@ const limitRoutes = require("../modules/limit/routes/limitRoutes");
 const drowRoutes = require("../modules/drow/routes/drowRoutes");
 const gameRoutes = require("../modules/game/routes/gameRoutes");
 const openStatusRoutes = require("../modules/openStatus/routes/openStatusRoutes");
+const reportRoutes = require("../modules/report/routes/reportRoutes");
 
 const baseRouter = Router();
 const basePath = '/v1/api'
@@ -26,6 +27,8 @@ baseRouter.use("/drow", drowRoutes);
 baseRouter.use("/game", gameRoutes);
 
 baseRouter.use("/open-status", openStatusRoutes);
+
+baseRouter.use("/report", reportRoutes);
 
 
 module.exports = { basePath, baseRouter };
