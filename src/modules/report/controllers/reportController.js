@@ -30,7 +30,7 @@ exports.getReport = async (req, res) => {
             {
                 $match: filterData
             },
-           
+
             {
                 $group: {
                     _id: {
@@ -39,13 +39,18 @@ exports.getReport = async (req, res) => {
                         gameType: "$gameType",
                         roundType: "$roundType"
                     },
+                    passTotalAmount: {
+                        $sum: {
+                            $cond: [{ $eq: ["$status", "PASS"] }, "$amount", 0]
+                        }
+                    },
                     totalAmount: { $sum: "$amount" },
                     totalResultAmount: { $sum: "$resultAmount" },
                     totalClientCommAmount: { $sum: "$clientCommAmount" },
                     totalAgentCommAmount: { $sum: "$agentCommAmount" }
                 }
             },
-           
+
             {
                 $group: {
                     _id: {
@@ -60,6 +65,7 @@ exports.getReport = async (req, res) => {
                             totalResultAmount: "$totalResultAmount",
                             totalClientCommAmount: "$totalClientCommAmount",
                             totalAgentCommAmount: "$totalAgentCommAmount",
+                            passTotalAmount: "$passTotalAmount",
                         }
                     }
                 }
@@ -104,6 +110,7 @@ exports.getReport = async (req, res) => {
                                                         totalResultAmount: "$$total.totalResultAmount",
                                                         totalClientCommAmount: "$$total.totalClientCommAmount",
                                                         totalAgentCommAmount: "$$total.totalAgentCommAmount",
+                                                        passTotalAmount: "$$total.passTotalAmount",
                                                     }
                                                 }
                                             }
@@ -131,12 +138,12 @@ exports.getReport = async (req, res) => {
                 }
             },
             {
-                $sort:{drowId:-1}
+                $sort: { drowId: -1 }
             },
             {
                 $project: {
                     groupedData: 1,
-                    drow: { $arrayElemAt: ["$drow", 0] } 
+                    drow: { $arrayElemAt: ["$drow", 0] }
                 }
             }
         ])
