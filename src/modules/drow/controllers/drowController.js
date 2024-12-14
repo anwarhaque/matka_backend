@@ -43,9 +43,47 @@ exports.listDrow = async (req, res) => {
     try {
 
         const { status } = req.query
-        const drows = await Drow.find({
-            ...(status && { status }),
-        }).sort({ createdAt: -1 })
+        const drows = await Drow.aggregate([
+            {
+                $match: { ...(status && { status }), }
+            },
+            {
+                $lookup: {
+                    from: "gameresults", // Name of the game result collection
+                    localField: "_id",
+                    foreignField: "drowId",
+                    as: "gameResults"
+                }
+            },
+            {
+                $addFields: {
+                    todaysGameResults: {
+                        $filter: {
+                            input: "$gameResults",
+                            as: "result",
+                            cond: {
+                                $eq: [
+                                    { $dateToString: { format: "%Y-%m-%d", date: "$$result.createdAt" } },
+                                    { $dateToString: { format: "%Y-%m-%d", date: new Date() } }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    openTime: 1,
+                    closeTime: 1,
+                    status: 1,
+                    todaysGameResults: { $arrayElemAt: ["$todaysGameResults", 0] }
+                }
+            },
+            {
+                $sort: { createdAt: -1 }
+            }
+        ])
         return res.status(200).json({
             meta: { msg: "Drow list found successfully", status: true },
             data: drows
