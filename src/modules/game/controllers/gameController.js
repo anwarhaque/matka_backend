@@ -30,7 +30,7 @@ exports.addGame = async (req, res) => {
                 meta: { msg: "Client not found", status: false }
             });
         }
-        if (checkGameType(num)=== 'JODI' && roundType.toUpperCase()==='CLOSE') {
+        if (checkGameType(num) === 'JODI' && roundType.toUpperCase() === 'CLOSE') {
             return res.status(400).json({
                 meta: { msg: "Sorry JODI is not allowed in close round", status: false }
             });
@@ -44,12 +44,12 @@ exports.addGame = async (req, res) => {
             clientId: client._id,
             agentId: client.agentId,
             roundType: roundType.toUpperCase(),
-            clientCommPer:client.clientCommission,
-            clientCommAmount:(amount*client.clientCommission)/100,
-            agentCommPer:client.agentCommission,
-            agentCommAmount:(amount*client.agentCommission)/100,
-            totalCommPer:client.clientCommission+client.agentCommission,
-            totalCommAmount:(client.clientCommission+client.agentCommission)*amount/100
+            clientCommPer: client.clientCommission,
+            clientCommAmount: (amount * client.clientCommission) / 100,
+            agentCommPer: client.agentCommission,
+            agentCommAmount: (amount * client.agentCommission) / 100,
+            totalCommPer: client.clientCommission + client.agentCommission,
+            totalCommAmount: (client.clientCommission + client.agentCommission) * amount / 100
         })
 
         client.limit -= amount
@@ -70,12 +70,13 @@ exports.addGame = async (req, res) => {
 exports.listGame = async (req, res) => {
     try {
         const { _id: clientId } = req.profile;
-        const { drowId, roundType } = req.query
-        const startOfToday = new Date();
+        const { drowId, roundType, selectedDate } = req.query
+        const startOfToday = selectedDate ? new Date(selectedDate) : new Date()
         startOfToday.setHours(0, 0, 0, 0);
 
         // Get the end of today
-        const endOfToday = new Date();
+
+        const endOfToday = selectedDate ? new Date(selectedDate) : new Date()
         endOfToday.setHours(23, 59, 59, 999);
 
         const filterData = {
