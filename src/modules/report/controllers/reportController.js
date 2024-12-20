@@ -572,7 +572,7 @@ exports.getAdminReport = async (req, res) => {
 
     try {
 
-        const { startDate, endDate, drowId } = req.query;
+        const { startDate, endDate, drowId, agentId, clientId } = req.query;
         const { _id } = req.profile;
 
         const startOfDay = new Date(startDate);
@@ -581,11 +581,12 @@ exports.getAdminReport = async (req, res) => {
 
 
         const filterData = {
-            // clientId: new mongoose.Types.ObjectId(_id),
             createdAt: {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
             },
+            ...(agentId && { agentId: new mongoose.Types.ObjectId(agentId) }),
+            ...(clientId && { clientId: new mongoose.Types.ObjectId(clientId) }),
             ...(drowId && { drowId: new mongoose.Types.ObjectId(drowId) })
         }
 
@@ -597,32 +598,47 @@ exports.getAdminReport = async (req, res) => {
             {
                 $match: filterData
             },
-
             {
                 $group: {
                     _id: {
+                        agentId: "$agentId",
+                        clientId: "$clientId",
                         drowId: "$drowId",
-                        day: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                        day: {
+                            $dateToString: {
+                                format: "%Y-%m-%d",
+                                date: "$createdAt",
+                            },
+                        },
                         gameType: "$gameType",
-                        roundType: "$roundType"
+                        roundType: "$roundType",
                     },
                     passTotalAmount: {
                         $sum: {
-                            $cond: [{ $eq: ["$status", "PASS"] }, "$amount", 0]
-                        }
+                            $cond: [{ $eq: ["$status", "PASS"] }, "$amount", 0],
+                        },
                     },
-                    totalAmount: { $sum: "$amount" },
-                    totalResultAmount: { $sum: "$resultAmount" },
-                    totalClientCommAmount: { $sum: "$clientCommAmount" },
-                    totalAgentCommAmount: { $sum: "$agentCommAmount" }
-                }
+                    totalAmount: {
+                        $sum: "$amount",
+                    },
+                    totalResultAmount: {
+                        $sum: "$resultAmount",
+                    },
+                    totalClientCommAmount: {
+                        $sum: "$clientCommAmount",
+                    },
+                    totalAgentCommAmount: {
+                        $sum: "$agentCommAmount",
+                    },
+                },
             },
-
             {
                 $group: {
                     _id: {
+                        agentId: "$_id.agentId",
+                        clientId: "$_id.clientId",
                         drowId: "$_id.drowId",
-                        day: "$_id.day"
+                        day: "$_id.day",
                     },
                     gameTotals: {
                         $push: {
@@ -633,86 +649,143 @@ exports.getAdminReport = async (req, res) => {
                             totalClientCommAmount: "$totalClientCommAmount",
                             totalAgentCommAmount: "$totalAgentCommAmount",
                             passTotalAmount: "$passTotalAmount",
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
             {
                 $group: {
-                    _id: "$_id.drowId",
+                    _id: {
+                        agentId: "$_id.agentId",
+                        clientId: "$_id.clientId",
+                        drowId: "$_id.drowId",
+                    },
                     days: {
                         $push: {
                             day: "$_id.day",
-                            totals: "$gameTotals"
-                        }
-                    }
-                }
+                            totals: "$gameTotals",
+                        },
+                    },
+                },
             },
             {
-                $project: {
-                    _id: 0,
-                    drowId: "$_id",
-                    groupedData: {
-                        $arrayToObject: {
-                            $map: {
-                                input: "$days",
-                                as: "dayData",
-                                in: {
-                                    k: "$$dayData.day",
-                                    v: {
-                                        $arrayToObject: {
-                                            $map: {
-                                                input: "$$dayData.totals",
-                                                as: "total",
-                                                in: {
-                                                    k: {
-                                                        $concat: [
-                                                            "$$total.gameType",
-                                                            "_",
-                                                            "$$total.roundType"
-                                                        ]
-                                                    },
-                                                    v: {
-                                                        totalAmount: "$$total.totalAmount",
-                                                        totalResultAmount: "$$total.totalResultAmount",
-                                                        totalClientCommAmount: "$$total.totalClientCommAmount",
-                                                        totalAgentCommAmount: "$$total.totalAgentCommAmount",
-                                                        passTotalAmount: "$$total.passTotalAmount",
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                $group: {
+                    _id: {
+                        agentId: "$_id.agentId",
+                        clientId: "$_id.clientId",
+                    },
+                    drows: {
+                        $push: {
+                            drow: "$_id.drowId",
+                            days: "$days",
+                        },
+                    },
+                },
+            },
+            {
+                $group: {
+                    _id: {
+                        agentId: "$_id.agentId",
+                    },
+                    clients: {
+                        $push: {
+                            clientId: "$_id.clientId",
+                            drows: "$drows",
+                        },
+                    },
+                },
             },
             {
                 $lookup: {
                     from: "drows",
-                    localField: "drowId",
+                    localField: "clients.drows.drow",
                     foreignField: "_id",
-                    as: "drow",
+                    as: "drowDetails",
                     pipeline: [
                         {
                             $project: {
+                                _id: 1,
                                 name: 1,
-                            }
-                        }
-                    ]
-                }
+                            },
+                        },
+                    ],
+                },
             },
             {
-                $sort: { drowId: -1 }
+                $lookup: {
+                    from: "users",
+                    localField: "clients.clientId",
+                    foreignField: "_id",
+                    as: "clientDetails",
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $addFields: {
+                    clients: {
+                        $map: {
+                            input: "$clients",
+                            as: "clientData",
+                            in: {
+                                clientId: "$$clientData.clientId",
+                                clientDetails: {
+                                    $arrayElemAt: [
+                                        {
+                                            $filter: {
+                                                input: "$clientDetails",
+                                                as: "detail",
+                                                cond: { $eq: ["$$detail._id", "$$clientData.clientId"] },
+                                            },
+                                        },
+                                        0,
+                                    ],
+                                },
+                                drows: {
+                                    $map: {
+                                        input: "$$clientData.drows",
+                                        as: "drowData",
+                                        in: {
+                                            drowId: "$$drowData.drow",
+                                            drowDetails: {
+                                                $arrayElemAt: [
+                                                    {
+                                                        $filter: {
+                                                            input: "$drowDetails",
+                                                            as: "detail",
+                                                            cond: { $eq: ["$$detail._id", "$$drowData.drow"] },
+                                                        },
+                                                    },
+                                                    0,
+                                                ],
+                                            },
+                                            days: "$$drowData.days",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            {
+                $sort: {
+                    "_id.agentId": 1,
+                },
             },
             {
                 $project: {
-                    groupedData: 1,
-                    drow: { $arrayElemAt: ["$drow", 0] }
-                }
-            }
+                    _id: 0,
+                    agentId: "$_id.agentId",
+                    clients: 1,
+                },
+            },
         ])
 
         return res.status(200).json({
