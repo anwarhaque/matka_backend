@@ -747,7 +747,7 @@ exports.getAdminReport = async (req, res) => {
                                         0,
                                     ],
                                 },
-                                drows: {
+                                groupedData: {
                                     $map: {
                                         input: "$$clientData.drows",
                                         as: "drowData",
@@ -765,7 +765,39 @@ exports.getAdminReport = async (req, res) => {
                                                     0,
                                                 ],
                                             },
-                                            days: "$$drowData.days",
+                                            days: {
+                                                $map: {
+                                                    input: "$$drowData.days", // Iterate over days
+                                                    as: "dayData",
+                                                    in: {
+                                                        day: "$$dayData.day", // Include day
+                                                        totals: {
+                                                            $arrayToObject: {
+                                                                $map: {
+                                                                    input: "$$dayData.totals", // Iterate over totals
+                                                                    as: "total",
+                                                                    in: {
+                                                                        k: {
+                                                                            $concat: [
+                                                                                "$$total.gameType",
+                                                                                "_",
+                                                                                "$$total.roundType",
+                                                                            ],
+                                                                        },
+                                                                        v: {
+                                                                            totalAmount: "$$total.totalAmount",
+                                                                            totalResultAmount: "$$total.totalResultAmount",
+                                                                            totalClientCommAmount: "$$total.totalClientCommAmount",
+                                                                            totalAgentCommAmount: "$$total.totalAgentCommAmount",
+                                                                            passTotalAmount: "$$total.passTotalAmount",
+                                                                        },
+                                                                    },
+                                                                },
+                                                            },
+                                                        },
+                                                    },
+                                                },
+                                            },
                                         },
                                     },
                                 },
@@ -786,6 +818,30 @@ exports.getAdminReport = async (req, res) => {
                     clients: 1,
                 },
             },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "agentId",
+                    foreignField: "_id",
+                    as: "agent",
+                    pipeline: [
+                        {
+                            $project: {
+                                _id: 1,
+                                name: 1,
+                            },
+                        },
+                    ],
+                },
+            },
+            {
+                $project: {
+                    agent: {
+                        $arrayElemAt: ["$agent", 0],
+                    },
+                    clients: 1,
+                },
+            }
         ])
 
         return res.status(200).json({
