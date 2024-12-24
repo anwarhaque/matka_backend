@@ -30,6 +30,12 @@ exports.addGame = async (req, res) => {
                 meta: { msg: "Client not found", status: false }
             });
         }
+        
+        if (client.limit<amount) {
+            return res.status(400).json({
+                meta: { msg: "You don't have enough limit", status: false }
+            });
+        }
         if (checkGameType(num) === 'JODI' && roundType.toUpperCase() === 'CLOSE') {
             return res.status(400).json({
                 meta: { msg: "Sorry JODI is not allowed in close round", status: false }
