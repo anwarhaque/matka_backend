@@ -140,12 +140,13 @@ exports.updateClientLimit = async (req, res) => {
 
 
         // Save the users' new balances
-        await agent.save();
+       const agentSavedData =  await agent.save();
         await client.save();
 
 
         return res.status(200).json({
-            meta: { msg: "Limit added successfully", status: true }
+            meta: { msg: "Limit added successfully", status: true },
+            agent:agentSavedData
         });
 
     } catch (error) {
