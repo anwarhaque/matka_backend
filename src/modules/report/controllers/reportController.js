@@ -15,6 +15,7 @@ exports.getReport = async (req, res) => {
 
         const filterData = {
             clientId: new mongoose.Types.ObjectId(_id),
+            // status: { $ne: 'PENDING' },
             createdAt: {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
@@ -172,7 +173,7 @@ exports.getClientReport = async (req, res) => {
 
         const filterData = {
             clientId: new mongoose.Types.ObjectId(clientId),
-            status: { $ne: 'PENDING' },
+            // status: { $ne: 'PENDING' },
             createdAt: {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
@@ -330,6 +331,7 @@ exports.getAgentReport = async (req, res) => {
 
         const filterData = {
             agentId: new mongoose.Types.ObjectId(agentId),
+            // status: { $ne: 'PENDING' },
             createdAt: {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
@@ -581,6 +583,7 @@ exports.getAdminReport = async (req, res) => {
 
 
         const filterData = {
+            // status: { $ne: 'PENDING' },
             createdAt: {
                 $gte: startOfDay, // Start of the day
                 $lt: endOfDay     // Start of the next day (exclusive)
