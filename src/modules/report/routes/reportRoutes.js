@@ -3,7 +3,7 @@ const { getReport,getClientReport, getAgentReport, getAdminReport  } = require("
 
 const reportRoutes = require("express").Router();
 
-reportRoutes.get("/list", authAgentAdmin,  getReport);
+reportRoutes.get("/list", authClient,  getReport);
 reportRoutes.get("/clientReport", authAgentAdmin,  getClientReport);
 reportRoutes.get("/agentReport", authAgentAdmin,  getAgentReport);
 reportRoutes.get("/adminReport", authAdmin,  getAdminReport);
