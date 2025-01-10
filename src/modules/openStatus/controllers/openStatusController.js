@@ -412,7 +412,8 @@ exports.updateResult = async (req, res) => {
 
 
         return res.status(200).json({
-            meta: { msg: `${roundType} Result updated successfully`, status: true }
+            meta: { msg: `${roundType} Result updated successfully`, status: true },
+            result
         })
     } catch (error) {
         return res.status(400).json({ message: error.message });
