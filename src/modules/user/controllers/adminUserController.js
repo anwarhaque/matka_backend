@@ -302,13 +302,19 @@ exports.getUser = async (req, res) => {
         return res.status(400).json({ message: error.message });
     }
 };
+
 exports.listUser = async (req, res) => {
     try {
 
         const { userType, agentId } = req.query
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const skip = (page - 1) * limit;
+
+        const filter = { userType, ...(agentId && { agentId: new mongoose.Types.ObjectId(agentId) }) }
         const users = await User.aggregate([
             {
-                $match: { userType, ...(agentId && { agentId: new mongoose.Types.ObjectId(agentId) }) }
+                $match: filter
             },
             {
                 $sort: { createdAt: -1 }
@@ -327,6 +333,13 @@ exports.listUser = async (req, res) => {
                     preserveNullAndEmptyArrays: true
                 }
             },
+            {
+                // Pagination stages
+                $skip: skip, // Number of documents to skip
+            },
+            {
+                $limit: limit, // Number of documents to return
+            },
         ])
 
         // if (!users.length) {
@@ -335,9 +348,15 @@ exports.listUser = async (req, res) => {
         //     })
         // }
 
+
+        const totalCount = await User.countDocuments(filter);
+
         return res.status(200).json({
             meta: { msg: `${userType} found successfully`, status: true },
-            data: users
+            data: users,
+            totalCount,
+            totalPages: Math.ceil(totalCount / limit),
+            currentPage: page,
         })
     } catch (error) {
         return res.status(400).json({ message: error.message });
