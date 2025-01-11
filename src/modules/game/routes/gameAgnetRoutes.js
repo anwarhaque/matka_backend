@@ -5,6 +5,6 @@ const gameAgentRoutes = require("express").Router();
 
 gameAgentRoutes.post("/add", authAgent, addGame);
 gameAgentRoutes.get("/list", authAgent, listGame);
-gameAgentRoutes.delete("/delete/:gameId", authAgent, deleteGame);
+gameAgentRoutes.delete("/delete/:gameId/:clientId", authAgent, deleteGame);
 
 module.exports = gameAgentRoutes;

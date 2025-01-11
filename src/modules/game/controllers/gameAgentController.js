@@ -110,9 +110,9 @@ exports.listGame = async (req, res) => {
 
 exports.deleteGame = async (req, res) => {
     try {
-        const { gameId } = req.params;
+        const { gameId, clientId } = req.params;
 
-        const { _id: clientId } = req.query;
+        // const { _id: clientId } = req.query;
 
         const game = await Game.findByIdAndDelete(gameId)
 
