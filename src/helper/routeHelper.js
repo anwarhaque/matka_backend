@@ -8,6 +8,7 @@ const gameRoutes = require("../modules/game/routes/gameRoutes");
 const openStatusRoutes = require("../modules/openStatus/routes/openStatusRoutes");
 const reportRoutes = require("../modules/report/routes/reportRoutes");
 const gameAgentRoutes = require("../modules/game/routes/gameAgnetRoutes");
+const marqueeRoutes = require("../modules/marquee/routes/marqueeRoutes");
 
 const baseRouter = Router();
 const basePath = '/v1/api'
@@ -31,6 +32,8 @@ baseRouter.use("/agent/game", gameAgentRoutes);
 baseRouter.use("/open-status", openStatusRoutes);
 
 baseRouter.use("/report", reportRoutes);
+
+baseRouter.use("/marquee", marqueeRoutes);
 
 
 module.exports = { basePath, baseRouter };
