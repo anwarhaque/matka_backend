@@ -63,19 +63,19 @@ const authAgent = async (req, res, next) => {
     const isAuthorized = await validateSignature(req);
 
     if (!isAuthorized) {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Not Authorized", status: false }
         })
     }
 
 
     if (req.profile.userType != 'AGENT') {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Not Authorized", status: false }
         })
     }
     if (req.profile.status === 'DEACTIVE') {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Your account is inactive", status: false }
         })
     }
@@ -91,18 +91,18 @@ const authClient = async (req, res, next) => {
     const isAuthorized = await validateSignature(req);
 
     if (!isAuthorized) {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Not Authorized", status: false }
         })
     } 
 
     if (req.profile.userType != 'CLIENT') {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Not Authorized", status: false }
         })
     }
     if (req.profile.status === 'DEACTIVE') {
-        return res.status(403).json({
+        return res.status(401).json({
             meta: { msg: "Your account is inactive", status: false }
         })
     }
