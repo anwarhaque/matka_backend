@@ -104,8 +104,45 @@ exports.getDrow = async (req, res) => {
             });
         }
 
-        const drow = await Drow.findById(drowId)
-        if (!drow) {
+        const drow = await Drow.aggregate([
+            {
+                $match: { _id: new mongoose.Types.ObjectId(drowId)}
+            },
+            {
+                $lookup: {
+                    from: "gameresults", // Name of the game result collection
+                    localField: "_id",
+                    foreignField: "drowId",
+                    as: "gameResults"
+                }
+            },
+            {
+                $addFields: {
+                    todaysGameResults: {
+                        $filter: {
+                            input: "$gameResults",
+                            as: "result",
+                            cond: {
+                                $eq: [
+                                    { $dateToString: { format: "%Y-%m-%d", date: "$$result.createdAt" } },
+                                    { $dateToString: { format: "%Y-%m-%d", date: new Date() } }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $project: {
+                    name: 1,
+                    openTime: 1,
+                    closeTime: 1,
+                    status: 1,
+                    todaysGameResults: { $arrayElemAt: ["$todaysGameResults", 0] }
+                }
+            },
+        ])
+        if (!drow[0]) {
             return res.status(404).json({
                 meta: { msg: "Drow not found", status: false }
             });
@@ -113,7 +150,7 @@ exports.getDrow = async (req, res) => {
 
         return res.status(200).json({
             meta: { msg: "Drow found successfully", status: true },
-            data: drow
+            data: drow[0]
         });
     } catch (error) {
         return res.status(400).json({ message: error.message });
