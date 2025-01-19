@@ -2,7 +2,7 @@ const User = require("../../user/models/userModel");
 const Game = require("../models/gameModel");
 
 const checkGameType = (number) => {
-    const len = number.length;
+    const len = number.toString().length;
     if (len === 1) {
         return "SINGLE";
     } else if (len === 2) {
