@@ -96,7 +96,7 @@ exports.listGame = async (req, res) => {
             },
         }
 
-        const games = await Game.find(filterData).sort({ createdAt: 1 })
+        const games = await Game.find(filterData).sort({ createdAt: -1 })
 
         return res.status(200).json({
             meta: { msg: "Game list found successfully", status: true },
