@@ -1,12 +1,25 @@
 const User = require("../../user/models/userModel");
 const Game = require("../models/gameModel");
 
+// const checkGameType = (number) => {
+//     if (number >= 0 && number <= 9) {
+//         return "SINGLE";
+//     } else if (number >= 10 && number <= 99) {
+//         return "JODI";
+//     } else if (number >= 100 && number <= 999) {
+//         return "PATTI";
+//     } else {
+//         return "";
+//     }
+// }
+
 const checkGameType = (number) => {
-    if (number >= 0 && number <= 9) {
+    const len = number.length;
+    if (len === 1) {
         return "SINGLE";
-    } else if (number >= 10 && number <= 99) {
+    } else if (len === 2) {
         return "JODI";
-    } else if (number >= 100 && number <= 999) {
+    } else if (len === 3) {
         return "PATTI";
     } else {
         return "";
@@ -95,7 +108,7 @@ exports.listGame = async (req, res) => {
             },
         }
 
-        const games = await Game.find(filterData).sort({ createdAt: -1 })
+        const games = await Game.find(filterData).sort({ createdAt: 1 })
 
         return res.status(200).json({
             meta: { msg: "Game list found successfully", status: true },
