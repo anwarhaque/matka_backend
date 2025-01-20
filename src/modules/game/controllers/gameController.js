@@ -99,13 +99,13 @@ exports.listGame = async (req, res) => {
         endOfToday.setHours(23, 59, 59, 999);
 
         const filterData = {
-            ...(drowId && { drowId }),
-            ...(roundType && { roundType: roundType.toUpperCase() }),
             clientId,
-            lockTime: {
+            createdAt: {
                 $gte: startOfToday,
                 $lt: endOfToday,
             },
+            ...(drowId && { drowId }),
+            ...(roundType && { roundType: roundType.toUpperCase() }),
         }
 
         const games = await Game.find(filterData).sort({ createdAt: -1 })

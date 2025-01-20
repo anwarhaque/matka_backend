@@ -29,5 +29,9 @@ const gameSchema = new mongoose.Schema({
     }
 );
 
+gameSchema.index({ clientId: 1 });
+gameSchema.index({ createdAt: 1 });
+gameSchema.index({ drowId: 1 });
+gameSchema.index({ roundType: 1 });
 const Game = mongoose.model('Game', gameSchema);
 module.exports = Game;
