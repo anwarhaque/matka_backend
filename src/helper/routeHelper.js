@@ -35,5 +35,8 @@ baseRouter.use("/report", reportRoutes);
 
 baseRouter.use("/marquee", marqueeRoutes);
 
+baseRouter.use('/health', (req, res) => {
+    res.status(200).json({ status: 'SERVER IS UP' });
+});
 
 module.exports = { basePath, baseRouter };
